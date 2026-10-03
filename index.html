@@ -21,27 +21,27 @@
   <body>
 
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind?v=4; autoStart: true; uiLoading: yes; uiScanning: yes;" 
+      mindar-image="imageTargetSrc: ./targets.mind?v=6; autoStart: true; uiLoading: yes; uiScanning: yes;" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false" 
       color-space="sRGB" 
       renderer="colorManagement: true, physicallyCorrectLights">
       
       <a-assets>
-        <video id="v1" src="./video.mp4?v=4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
-        <video id="v-irwin" src="./irwin.mp4?v=4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+        <video id="v1" src="./video.mp4?v=6" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+        <video id="v-irwin" src="./irwin.mp4?v=6" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <!-- Target 0: Nhân vật 1 -->
       <a-entity mindar-image-target="targetIndex: 0" id="target1">
-        <a-plane material="src: #v1; shader: flat; side: double; transparent: false" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-plane>
+        <a-plane material="src: #v1; shader: flat; transparent: false" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-plane>
       </a-entity>
 
       <!-- Target 1: Irwin -->
       <a-entity mindar-image-target="targetIndex: 1" id="target-irwin">
-        <a-plane material="src: #v-irwin; shader: flat; side: double; transparent: false" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-plane>
+        <a-plane material="src: #v-irwin; shader: flat; transparent: false" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-plane>
       </a-entity>
 
     </a-scene>
@@ -50,32 +50,32 @@
       const v1 = document.querySelector("#v1");
       const vIrwin = document.querySelector("#v-irwin");
 
-      // Mở khóa luồng video ngầm ngay khi chạm màn hình
-      const unlockAudioVideo = () => {
-        if (v1) { v1.muted = true; v1.play().then(() => v1.pause()).catch(() => {}); }
-        if (vIrwin) { vIrwin.muted = true; vIrwin.play().then(() => vIrwin.pause()).catch(() => {}); }
-      };
-      window.addEventListener("touchstart", unlockAudioVideo, { once: true });
-      window.addEventListener("click", unlockAudioVideo, { once: true });
+      // Ép cố định chế độ câm cho trình duyệt di động duyệt autoplay 100%
+      [v1, vIrwin].forEach(v => {
+        if (v) {
+          v.muted = true;
+          v.defaultMuted = true;
+        }
+      });
 
-      // Nhận diện Target 0
+      // Bắt Target 0
       document.querySelector("#target1").addEventListener("targetFound", () => {
+        if (vIrwin) vIrwin.pause();
         if (v1) {
           v1.currentTime = 0;
-          v1.muted = true;
-          v1.play().catch(e => console.log(e));
+          v1.play().catch(() => {});
         }
       });
       document.querySelector("#target1").addEventListener("targetLost", () => {
         if (v1) v1.pause();
       });
 
-      // Nhận diện Target 1
+      // Bắt Target 1
       document.querySelector("#target-irwin").addEventListener("targetFound", () => {
+        if (v1) v1.pause();
         if (vIrwin) {
           vIrwin.currentTime = 0;
-          vIrwin.muted = true;
-          vIrwin.play().catch(e => console.log(e));
+          vIrwin.play().catch(() => {});
         }
       });
       document.querySelector("#target-irwin").addEventListener("targetLost", () => {
