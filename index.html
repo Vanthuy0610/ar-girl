@@ -5,6 +5,11 @@
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
+      /* Khóa và ẩn hoàn toàn nút VR cũng như thông báo xoay màn hình */
+      .a-enter-vr, .a-enter-ar, .a-orientation-modal {
+        display: none !important;
+      }
+
       #sound-btn {
         position: fixed;
         bottom: 30px;
@@ -28,7 +33,6 @@
 
     <button id="sound-btn">🔊 Bật Âm Thanh</button>
 
-    <!-- Đã tắt nút VR bằng vr-mode-ui="enabled: false" -->
     <a-scene 
       mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;" 
       vr-mode-ui="enabled: false" 
