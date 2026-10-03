@@ -56,18 +56,18 @@
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <video id="v1" src="video.mp4" playsinline webkit-playsinline loop muted preload="auto"></video>
-        <video id="v-irwin" src="irwin.mp4" playsinline webkit-playsinline loop muted preload="auto"></video>
+        <video id="v1" src="video.mp4" crossorigin="anonymous" playsinline webkit-playsinline loop muted preload="auto"></video>
+        <video id="v-irwin" src="irwin.mp4" crossorigin="anonymous" playsinline webkit-playsinline loop muted preload="auto"></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0" id="target1">
-        <a-video src="#v1" width="1" height="0.75" position="0 0 0.01"></a-video>
+        <a-plane material="shader: flat; src: #v1; side: double" width="1" height="0.75" position="0 0 0.01"></a-plane>
       </a-entity>
 
       <a-entity mindar-image-target="targetIndex: 1" id="target-irwin">
-        <a-video src="#v-irwin" width="1" height="0.75" position="0 0 0.01"></a-video>
+        <a-plane material="shader: flat; src: #v-irwin; side: double" width="1" height="0.75" position="0 0 0.01"></a-plane>
       </a-entity>
     </a-scene>
 
