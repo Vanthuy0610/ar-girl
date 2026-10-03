@@ -16,27 +16,12 @@
       .a-enter-vr, .a-enter-vr-button, .a-enter-ar, .a-orientation-modal, [vr-mode-ui] {
         display: none !important;
       }
-      #status-log {
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        background: rgba(0, 0, 0, 0.75);
-        color: #00ff00;
-        padding: 8px 12px;
-        font-family: monospace;
-        font-size: 12px;
-        z-index: 9999;
-        border-radius: 6px;
-        pointer-events: none;
-      }
     </style>
   </head>
   <body>
 
-    <div id="status-log">Đang khởi tạo AR...</div>
-
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiScanning: no;" 
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes;" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false" 
       color-space="sRGB" 
@@ -49,66 +34,52 @@
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
+      <!-- Target 0: Nhân vật 1 -->
       <a-entity mindar-image-target="targetIndex: 0" id="target1">
-        <a-video src="#v1" width="1" height="0.75" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-plane material="src: #v1; shader: flat; transparent: false" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-plane>
       </a-entity>
 
+      <!-- Target 1: Irwin -->
       <a-entity mindar-image-target="targetIndex: 1" id="target-irwin">
-        <a-video src="#v-irwin" width="1" height="0.75" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-plane material="src: #v-irwin; shader: flat; transparent: false" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-plane>
       </a-entity>
 
     </a-scene>
 
     <script>
-      const log = (msg) => {
-        const el = document.querySelector("#status-log");
-        if (el) el.innerText = msg;
-      };
-
       const v1 = document.querySelector("#v1");
       const vIrwin = document.querySelector("#v-irwin");
 
-      const unlock = () => {
-        if (v1) { v1.muted = true; v1.play().then(() => v1.pause()).catch(()=>{}); }
-        if (vIrwin) { vIrwin.muted = true; vIrwin.play().then(() => vIrwin.pause()).catch(()=>{}); }
-        log("Sẵn sàng! Đưa camera lại gần bức ảnh...");
+      // Tự động kích hoạt phát ngầm ngay khi mở trang hoặc chạm màn hình
+      const startVideos = () => {
+        if (v1) {
+          v1.muted = true;
+          v1.play().catch(() => {});
+        }
+        if (vIrwin) {
+          vIrwin.muted = true;
+          vIrwin.play().catch(() => {});
+        }
       };
-      window.addEventListener("touchstart", unlock, { once: true });
-      window.addEventListener("click", unlock, { once: true });
 
-      const sceneEl = document.querySelector("a-scene");
-      if (sceneEl) {
-        sceneEl.addEventListener("arReady", () => {
-          log("AR Đã Sẵn Sàng! Hãy quét bức ảnh.");
-        });
-        sceneEl.addEventListener("arError", () => {
-          log("LỖI: Không đọc được file targets.mind!");
-        });
-      }
+      window.addEventListener("touchstart", startVideos, { once: true });
+      window.addEventListener("click", startVideos, { once: true });
 
-      const t1 = document.querySelector("#target1");
-      if (t1) {
-        t1.addEventListener("targetFound", () => {
-          log("Đã thấy Nhân vật 1!");
-          if (v1) { v1.muted = true; v1.play().catch(e => log("Lỗi video 1: " + e.message)); }
-        });
-        t1.addEventListener("targetLost", () => {
-          log("Đã mất dấu Nhân vật 1.");
-          if (v1) v1.pause();
-        });
-      }
+      // Khi quét trúng Target 0
+      document.querySelector("#target1").addEventListener("targetFound", () => {
+        if (v1) {
+          v1.currentTime = 0;
+          v1.play().catch(() => {});
+        }
+      });
 
-      const tIrwin = document.querySelector("#target-irwin");
-      if (tIrwin) {
-        tIrwin.addEventListener("targetFound", () => {
-          log("Đã thấy Irwin!");
-          if (vIrwin) { vIrwin.muted = true; vIrwin.play().catch(e => log("Lỗi Irwin: " + e.message)); }
-        });
-        tIrwin.addEventListener("targetLost", () => {
-          log("Đã mất dấu Irwin.");
-          if (vIrwin) vIrwin.pause();
-        });
-      }
+      // Khi quét trúng Target 1
+      document.querySelector("#target-irwin").addEventListener("targetFound", () => {
+        if (vIrwin) {
+          vIrwin.currentTime = 0;
+          vIrwin.play().catch(() => {});
+        }
+      });
     </script>
   </body>
 </html>
