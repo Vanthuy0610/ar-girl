@@ -16,9 +16,35 @@
       .a-enter-vr, .a-enter-vr-button, .a-enter-ar, .a-orientation-modal, [vr-mode-ui] {
         display: none !important;
       }
+      /* Màn hình lớp phủ bắt buộc chạm để mở khóa video trên điện thoại */
+      #start-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #ffffff;
+        font-family: sans-serif;
+        font-size: 16px;
+        font-weight: bold;
+        z-index: 9999;
+        cursor: pointer;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+      }
     </style>
   </head>
   <body>
+
+    <!-- Lớp phủ cấp quyền video ngầm -->
+    <div id="start-overlay">
+      👉 CHẠM VÀO MÀN HÌNH ĐỂ BẮT ĐẦU AR 👈
+    </div>
 
     <a-scene 
       mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes;" 
@@ -36,49 +62,55 @@
 
       <!-- Target 0: Nhân vật 1 -->
       <a-entity mindar-image-target="targetIndex: 0" id="target1">
-        <a-plane material="src: #v1; shader: flat; transparent: false" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-plane>
+        <a-plane material="src: #v1; shader: flat; side: double" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-plane>
       </a-entity>
 
       <!-- Target 1: Irwin -->
       <a-entity mindar-image-target="targetIndex: 1" id="target-irwin">
-        <a-plane material="src: #v-irwin; shader: flat; transparent: false" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-plane>
+        <a-plane material="src: #v-irwin; shader: flat; side: double" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-plane>
       </a-entity>
 
     </a-scene>
 
     <script>
+      const overlay = document.querySelector("#start-overlay");
       const v1 = document.querySelector("#v1");
       const vIrwin = document.querySelector("#v-irwin");
 
-      // Tự động kích hoạt phát ngầm ngay khi mở trang hoặc chạm màn hình
-      const startVideos = () => {
+      // Mở khóa toàn bộ luồng video ngầm trên thiết bị di động
+      overlay.addEventListener("click", () => {
+        overlay.style.display = "none";
+        
         if (v1) {
           v1.muted = true;
-          v1.play().catch(() => {});
+          v1.play().then(() => { v1.pause(); }).catch(() => {});
         }
         if (vIrwin) {
           vIrwin.muted = true;
-          vIrwin.play().catch(() => {});
+          vIrwin.play().then(() => { vIrwin.pause(); }).catch(() => {});
         }
-      };
-
-      window.addEventListener("touchstart", startVideos, { once: true });
-      window.addEventListener("click", startVideos, { once: true });
+      });
 
       // Khi quét trúng Target 0
       document.querySelector("#target1").addEventListener("targetFound", () => {
         if (v1) {
-          v1.currentTime = 0;
+          v1.muted = true;
           v1.play().catch(() => {});
         }
+      });
+      document.querySelector("#target1").addEventListener("targetLost", () => {
+        if (v1) v1.pause();
       });
 
       // Khi quét trúng Target 1
       document.querySelector("#target-irwin").addEventListener("targetFound", () => {
         if (vIrwin) {
-          vIrwin.currentTime = 0;
+          vIrwin.muted = true;
           vIrwin.play().catch(() => {});
         }
+      });
+      document.querySelector("#target-irwin").addEventListener("targetLost", () => {
+        if (vIrwin) vIrwin.pause();
       });
     </script>
   </body>
