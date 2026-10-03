@@ -29,23 +29,23 @@
     <button id="start-btn">Bấm vào đây để bắt đầu</button>
     
     <a-scene 
-      mindar-image="imageTargetSrc: targets.mind?v=16; autoStart: false; uiLoading: yes; uiScanning: yes;" 
+      mindar-image="imageTargetSrc: targets.mind?v=17; autoStart: false; uiLoading: yes; uiScanning: yes;" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <video id="v1" src="video.mp4" crossorigin="anonymous" playsinline webkit-playsinline loop muted preload="auto"></video>
-        <video id="v-irwin" src="irwin.mp4" crossorigin="anonymous" playsinline webkit-playsinline loop muted preload="auto"></video>
+        <video id="v1" src="video.mp4" playsinline webkit-playsinline loop muted preload="auto"></video>
+        <video id="v-irwin" src="irwin.mp4" playsinline webkit-playsinline loop muted preload="auto"></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0" id="target1">
-        <a-plane material="src: #v1; shader: flat; transparent: true" width="1" height="0.75" position="0 0 0.01"></a-plane>
+        <a-video src="#v1" width="1" height="0.75" position="0 0 0.01"></a-video>
       </a-entity>
 
       <a-entity mindar-image-target="targetIndex: 1" id="target-irwin">
-        <a-plane material="src: #v-irwin; shader: flat; transparent: true" width="1" height="0.75" position="0 0 0.01"></a-plane>
+        <a-video src="#v-irwin" width="1" height="0.75" position="0 0 0.01"></a-video>
       </a-entity>
     </a-scene>
 
@@ -56,28 +56,40 @@
       const vIrwin = document.querySelector("#v-irwin");
 
       startBtn.addEventListener("click", () => {
-        // Mở khóa video ngay lập tức (Xóa bỏ đoạn code gây lỗi chữ vIrIrwin)
-        v1.play();
-        v1.pause();
-        
-        vIrwin.play();
-        vIrwin.pause();
-        
         startBtn.style.display = "none";
+        
+        // Đảm bảo video tắt tiếng để lách luật chặn tự động phát của Safari/Chrome
+        v1.muted = true;
+        vIrwin.muted = true;
+
+        // Phát video để xin quyền
+        v1.play().catch(()=>{});
+        vIrwin.play().catch(()=>{});
+        
+        // Tuyệt chiêu: Đợi 0.5 giây sau mới Pause, tránh gây lỗi "sốc" trình duyệt
+        setTimeout(() => {
+            v1.pause();
+            vIrwin.pause();
+        }, 500);
+
         sceneEl.systems["mindar-image-system"].start();
       });
 
+      // Kích hoạt khi quét trúng Target 0
       document.querySelector("#target1").addEventListener("targetFound", () => {
         vIrwin.pause();
-        v1.play();
+        v1.currentTime = 0; // Tua lại từ đầu để xem trọn vẹn animation
+        v1.play().catch(()=>{});
       });
       document.querySelector("#target1").addEventListener("targetLost", () => {
         v1.pause();
       });
 
+      // Kích hoạt khi quét trúng Target 1
       document.querySelector("#target-irwin").addEventListener("targetFound", () => {
         v1.pause();
-        vIrwin.play();
+        vIrwin.currentTime = 0; 
+        vIrwin.play().catch(()=>{});
       });
       document.querySelector("#target-irwin").addEventListener("targetLost", () => {
         vIrwin.pause();
