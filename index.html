@@ -26,31 +26,27 @@
     </style>
   </head>
   <body>
-
     <button id="start-btn">Bấm vào đây để bắt đầu</button>
-
+    
     <a-scene 
-      mindar-image="imageTargetSrc: targets.mind?v=15; autoStart: false; uiLoading: yes; uiScanning: yes;" 
+      mindar-image="imageTargetSrc: targets.mind?v=16; autoStart: false; uiLoading: yes; uiScanning: yes;" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <!-- Đã gỡ bỏ autoplay và crossorigin. Thêm preload="auto" để sẵn sàng dữ liệu -->
-        <video id="v1" src="video.mp4" playsinline webkit-playsinline loop muted preload="auto"></video>
-        <video id="v-irwin" src="irwin.mp4" playsinline webkit-playsinline loop muted preload="auto"></video>
+        <video id="v1" src="video.mp4" crossorigin="anonymous" playsinline webkit-playsinline loop muted preload="auto"></video>
+        <video id="v-irwin" src="irwin.mp4" crossorigin="anonymous" playsinline webkit-playsinline loop muted preload="auto"></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- Quay lại dùng a-video, đẩy Z lên 0.1 để chắc chắn video nổi lên trên bản vẽ -->
       <a-entity mindar-image-target="targetIndex: 0" id="target1">
-        <a-video src="#v1" width="1" height="0.75" position="0 0 0.1"></a-video>
+        <a-plane material="src: #v1; shader: flat; transparent: true" width="1" height="0.75" position="0 0 0.01"></a-plane>
       </a-entity>
 
       <a-entity mindar-image-target="targetIndex: 1" id="target-irwin">
-        <a-video src="#v-irwin" width="1" height="0.75" position="0 0 0.1"></a-video>
+        <a-plane material="src: #v-irwin; shader: flat; transparent: true" width="1" height="0.75" position="0 0 0.01"></a-plane>
       </a-entity>
-
     </a-scene>
 
     <script>
@@ -59,36 +55,32 @@
       const v1 = document.querySelector("#v1");
       const vIrwin = document.querySelector("#v-irwin");
 
-      // Cấp quyền video bằng Promise an toàn tuyệt đối
       startBtn.addEventListener("click", () => {
-        if (v1) {
-            v1.muted = true;
-            v1.play().then(() => { v1.pause(); v1.currentTime = 0; }).catch(()=>{});
-        }
-        if (vIrwin) {
-            vIrwin.muted = true;
-            vIrwin.play().then(() => { vIrIrwin.pause(); vIrwin.currentTime = 0; }).catch(()=>{});
-        }
+        // Mở khóa video ngay lập tức (Xóa bỏ đoạn code gây lỗi chữ vIrIrwin)
+        v1.play();
+        v1.pause();
+        
+        vIrwin.play();
+        vIrwin.pause();
         
         startBtn.style.display = "none";
         sceneEl.systems["mindar-image-system"].start();
       });
 
-      // Kích hoạt khi quét trúng
       document.querySelector("#target1").addEventListener("targetFound", () => {
-        if (vIrwin) vIrwin.pause();
-        if (v1) v1.play().catch(() => {});
+        vIrwin.pause();
+        v1.play();
       });
       document.querySelector("#target1").addEventListener("targetLost", () => {
-        if (v1) v1.pause();
+        v1.pause();
       });
 
       document.querySelector("#target-irwin").addEventListener("targetFound", () => {
-        if (v1) v1.pause();
-        if (vIrwin) vIrwin.play().catch(() => {});
+        v1.pause();
+        vIrwin.play();
       });
       document.querySelector("#target-irwin").addEventListener("targetLost", () => {
-        if (vIrwin) vIrwin.pause();
+        vIrwin.pause();
       });
     </script>
   </body>
