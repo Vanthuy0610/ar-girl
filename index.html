@@ -5,7 +5,6 @@
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-      /* Cấu hình ép tràn 100% toàn bộ màn hình điện thoại */
       html, body {
         margin: 0;
         padding: 0;
@@ -15,7 +14,6 @@
         position: fixed;
       }
 
-      /* Khóa và ẩn hoàn toàn tất cả nút VR / AR */
       .a-enter-vr, .a-enter-vr-button, .a-enter-ar, .a-orientation-modal, [vr-mode-ui] {
         display: none !important;
         visibility: hidden !important;
@@ -44,7 +42,6 @@
 
     <button id="sound-btn">🔊 Bật Âm Thanh</button>
 
-    <!-- Đã bỏ 'embedded' để camera tràn full màn hình -->
     <a-scene 
       mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;" 
       vr-mode-ui="enabled: false" 
@@ -53,42 +50,67 @@
       renderer="colorManagement: true, physicallyCorrectLights">
       
       <a-assets>
-        <video id="ar-video" src="./video.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
+        <!-- Video 1 -->
+        <video id="v1" src="./video.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
+        <!-- Video 2 (Irwin) -->
+        <video id="v-irwin" src="./irwin.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0" id="target">
-        <a-video src="#ar-video" width="1" height="1.4" position="0 0 0" rotation="0 0 0"></a-video>
+      <!-- Target 0: Nhân vật 1 -->
+      <a-entity mindar-image-target="targetIndex: 0" id="target1">
+        <a-video src="#v1" width="1" height="1.4" position="0 0 0" rotation="0 0 0"></a-video>
+      </a-entity>
+
+      <!-- Target 1: Nhân vật Irwin -->
+      <a-entity mindar-image-target="targetIndex: 1" id="target-irwin">
+        <a-video src="#v-irwin" width="1" height="1.4" position="0 0 0" rotation="0 0 0"></a-video>
       </a-entity>
     </a-scene>
 
     <script>
-      // Xóa triệt để nút VR nếu xuất hiện
       setInterval(() => {
         const vrBtn = document.querySelector('.a-enter-vr');
         if (vrBtn) vrBtn.remove();
       }, 100);
 
-      const video = document.querySelector("#ar-video");
+      const v1 = document.querySelector("#v1");
+      const vIrwin = document.querySelector("#v-irwin");
       const btn = document.querySelector("#sound-btn");
-      const target = document.querySelector("#target");
 
-      target.addEventListener("targetFound", () => {
-        video.play();
-        if (video.muted) {
-          btn.style.display = "block";
-        }
+      const t1 = document.querySelector("#target1");
+      const tIrwin = document.querySelector("#target-irwin");
+
+      let currentVideo = null;
+
+      // Xử lý khi quét thấy Nhân vật 1
+      t1.addEventListener("targetFound", () => {
+        v1.play();
+        currentVideo = v1;
+        if (v1.muted) btn.style.display = "block";
       });
-
-      target.addEventListener("targetLost", () => {
-        video.pause();
+      t1.addEventListener("targetLost", () => {
+        v1.pause();
         btn.style.display = "none";
       });
 
+      // Xử lý khi quét thấy Nhân vật Irwin
+      tIrwin.addEventListener("targetFound", () => {
+        vIrwin.play();
+        currentVideo = vIrwin;
+        if (vIrwin.muted) btn.style.display = "block";
+      });
+      tIrwin.addEventListener("targetLost", () => {
+        vIrwin.pause();
+        btn.style.display = "none";
+      });
+
+      // Bật âm thanh chung
       btn.addEventListener("click", () => {
-        video.muted = false;
-        video.play();
+        v1.muted = false;
+        vIrwin.muted = false;
+        if (currentVideo) currentVideo.play();
         btn.style.display = "none";
       });
     </script>
