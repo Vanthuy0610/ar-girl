@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+      #play-button {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999;
+        padding: 12px 24px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: bold;
+        display: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      }
+    </style>
+  </head>
+  <body style="margin: 0; overflow: hidden;">
+    <button id="play-button">Bấm vào đây để phát Video</button>
+
+    <a-scene 
+      mindar-image="imageTargetSrc: ./targets.mind;" 
+      color-space="sRGB" 
+      renderer="colorManagement: true, physicallyCorrectLights" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: false">
+      
+      <a-assets>
+        <video id="my-video" src="./video.mp4" preload="auto" loop="true" crossorigin="anonymous" playsinline webkit-playsinline></video>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity id="target-entity" mindar-image-target="targetIndex: 0">
+        <!-- Thay đổi width/height theo tỷ lệ khung hình video của bạn (ví dụ: video 16:9 thì width="1" height="0.5625") -->
+        <a-video src="#my-video" width="1" height="0.75" position="0 0 0" rotation="0 0 0"></a-video>
+      </a-entity>
+    </a-scene>
+
+    <script>
+      const video = document.querySelector('#my-video');
+      const targetEntity = document.querySelector('#target-entity');
+      const playBtn = document.querySelector('#play-button');
+
+      // Khi phát hiện ra ảnh vật lý
+      targetEntity.addEventListener("targetFound", () => {
+        video.play().catch(() => {
+          // Trình duyệt di động chặn tự động phát âm thanh -> Hiện nút bấm hỗ trợ
+          playBtn.style.display = 'block';
+        });
+      });
+
+      // Khi đưa camera ra khỏi bức ảnh
+      targetEntity.addEventListener("targetLost", () => {
+        video.pause();
+      });
+
+      playBtn.addEventListener('click', () => {
+        video.play();
+        playBtn.style.display = 'none';
+      });
+    </script>
+  </body>
+</html>
