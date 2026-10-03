@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>AR Girl</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
@@ -23,10 +25,30 @@
         cursor: pointer;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
       }
+      #start-btn:disabled {
+        opacity: 0.7;
+        cursor: wait;
+      }
+      #status {
+        position: absolute;
+        left: 50%;
+        bottom: 20px;
+        transform: translateX(-50%);
+        z-index: 9999;
+        max-width: calc(100% - 32px);
+        padding: 8px 12px;
+        color: white;
+        background: rgba(0, 0, 0, 0.65);
+        border-radius: 8px;
+        font: 14px/1.3 sans-serif;
+        text-align: center;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
     <button id="start-btn">Bấm vào đây để bắt đầu</button>
+    <div id="status" role="status" aria-live="polite">Đang tải AR...</div>
     
     <a-scene 
       mindar-image="imageTargetSrc: targets.mind?v=17; autoStart: false; uiLoading: yes; uiScanning: yes;" 
@@ -51,49 +73,163 @@
 
     <script>
       const startBtn = document.querySelector("#start-btn");
+      const statusEl = document.querySelector("#status");
       const sceneEl = document.querySelector('a-scene');
       const v1 = document.querySelector("#v1");
       const vIrwin = document.querySelector("#v-irwin");
+      const target1 = document.querySelector("#target1");
+      const targetIrwin = document.querySelector("#target-irwin");
 
-      startBtn.addEventListener("click", () => {
+      let activeTarget = null;
+      let startRequested = false;
+
+      function setStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.style.background = isError
+          ? "rgba(160, 0, 0, 0.85)"
+          : "rgba(0, 0, 0, 0.65)";
+      }
+
+      function pauseVideo(video) {
+        if (video && !video.paused) video.pause();
+      }
+
+      function resetVideo(video) {
+        if (!video) return;
+        try {
+          if (video.readyState >= 1) video.currentTime = 0;
+        } catch (error) {
+          console.warn("Không thể tua video về đầu:", error);
+        }
+      }
+
+      function playFromStart(video, targetName) {
+        if (!video) return;
+        video.muted = true;
+
+        const playNow = () => {
+          if (activeTarget !== targetName) return;
+          resetVideo(video);
+          const playPromise = video.play();
+          if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch((error) => {
+              console.error("Không thể phát video AR:", error);
+              setStatus("Đã nhận diện nhưng trình duyệt không phát được video.", true);
+            });
+          }
+        };
+
+        if (video.readyState >= 1) {
+          playNow();
+        } else {
+          video.addEventListener("loadedmetadata", playNow, { once: true });
+        }
+      }
+
+      function activateTarget(targetName, video, label, otherVideo) {
+        activeTarget = targetName;
+        pauseVideo(otherVideo);
+        setStatus(`Đã nhận diện ${label}`);
+        playFromStart(video, targetName);
+      }
+
+      function deactivateTarget(targetName, video) {
+        pauseVideo(video);
+        if (activeTarget === targetName) {
+          activeTarget = null;
+          setStatus("Đưa camera về đúng hình để tiếp tục quét.");
+        }
+      }
+
+      function unlockVideo(video) {
+        if (!video) return;
+        video.muted = true;
+        video.setAttribute("muted", "");
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.then === "function") {
+          playPromise.then(() => {
+            window.setTimeout(() => {
+              if (activeTarget === null) {
+                pauseVideo(video);
+                resetVideo(video);
+              }
+            }, 100);
+          }).catch((error) => {
+            console.warn("Không mở khóa được video:", error);
+          });
+        }
+      }
+
+      function startAR() {
+        if (startRequested) return;
+
+        const mindarSystem = sceneEl.systems && sceneEl.systems["mindar-image-system"];
+        if (!mindarSystem) {
+          setStatus("MindAR chưa tải xong. Hãy tải lại trang.", true);
+          return;
+        }
+
+        startRequested = true;
+        startBtn.disabled = true;
+        setStatus("Đang xin quyền camera...");
+
+        unlockVideo(v1);
+        unlockVideo(vIrwin);
+
+        try {
+          const startPromise = mindarSystem.start();
+          if (startPromise && typeof startPromise.catch === "function") {
+            startPromise.catch((error) => {
+              console.error("Không khởi động được MindAR:", error);
+              startRequested = false;
+              startBtn.disabled = false;
+              setStatus("Không mở được camera hoặc MindAR.", true);
+            });
+          }
+        } catch (error) {
+          console.error("Không khởi động được MindAR:", error);
+          startRequested = false;
+          startBtn.disabled = false;
+          setStatus("Không mở được camera hoặc MindAR.", true);
+        }
+      }
+
+      startBtn.addEventListener("click", startAR);
+
+      sceneEl.addEventListener("arReady", () => {
         startBtn.style.display = "none";
-        
-        // Đảm bảo video tắt tiếng để lách luật chặn tự động phát của Safari/Chrome
-        v1.muted = true;
-        vIrwin.muted = true;
-
-        // Phát video để xin quyền
-        v1.play().catch(()=>{});
-        vIrwin.play().catch(()=>{});
-        
-        // Tuyệt chiêu: Đợi 0.5 giây sau mới Pause, tránh gây lỗi "sốc" trình duyệt
-        setTimeout(() => {
-            v1.pause();
-            vIrwin.pause();
-        }, 500);
-
-        sceneEl.systems["mindar-image-system"].start();
+        setStatus("Camera đã sẵn sàng. Đưa camera về hình target.");
       });
 
-      // Kích hoạt khi quét trúng Target 0
-      document.querySelector("#target1").addEventListener("targetFound", () => {
-        vIrwin.pause();
-        v1.currentTime = 0; // Tua lại từ đầu để xem trọn vẹn animation
-        v1.play().catch(()=>{});
-      });
-      document.querySelector("#target1").addEventListener("targetLost", () => {
-        v1.pause();
+      sceneEl.addEventListener("arError", (event) => {
+        console.error("MindAR arError:", event.detail || event);
+        startRequested = false;
+        startBtn.disabled = false;
+        startBtn.style.display = "block";
+        setStatus("MindAR không khởi động được. Kiểm tra quyền camera và target.mind.", true);
       });
 
-      // Kích hoạt khi quét trúng Target 1
-      document.querySelector("#target-irwin").addEventListener("targetFound", () => {
-        v1.pause();
-        vIrwin.currentTime = 0; 
-        vIrwin.play().catch(()=>{});
+      target1.addEventListener("targetFound", () => {
+        activateTarget("target-0", v1, "target 0", vIrwin);
       });
-      document.querySelector("#target-irwin").addEventListener("targetLost", () => {
-        vIrwin.pause();
+      target1.addEventListener("targetLost", () => {
+        deactivateTarget("target-0", v1);
       });
+
+      targetIrwin.addEventListener("targetFound", () => {
+        activateTarget("target-1", vIrwin, "target 1", v1);
+      });
+      targetIrwin.addEventListener("targetLost", () => {
+        deactivateTarget("target-1", vIrwin);
+      });
+
+      if (sceneEl.hasLoaded) {
+        setStatus("Sẵn sàng. Bấm nút để mở camera.");
+      } else {
+        sceneEl.addEventListener("loaded", () => {
+          setStatus("Sẵn sàng. Bấm nút để mở camera.");
+        }, { once: true });
+      }
     </script>
   </body>
 </html>
