@@ -28,18 +28,18 @@
       renderer="colorManagement: true, physicallyCorrectLights">
       
       <a-assets>
-        <video id="v1" src="./video.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
-        <video id="v-irwin" src="./irwin.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+        <video id="v1" src="./video.mp4" autoplay loop muted playsinline webkit-playsinline></video>
+        <video id="v-irwin" src="./irwin.mp4" autoplay loop muted playsinline webkit-playsinline></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0" id="target1">
-        <a-video src="#v1" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-video src="#v1" width="1" height="1" position="0 0 0" rotation="0 0 0" material="shader: flat"></a-video>
       </a-entity>
 
       <a-entity mindar-image-target="targetIndex: 1" id="target-irwin">
-        <a-video src="#v-irwin" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-video src="#v-irwin" width="1" height="1" position="0 0 0" rotation="0 0 0" material="shader: flat"></a-video>
       </a-entity>
 
     </a-scene>
@@ -48,37 +48,23 @@
       const v1 = document.querySelector("#v1");
       const vIrwin = document.querySelector("#v-irwin");
 
-      // Bắt buộc bật Tắt tiếng (muted) bằng JavaScript để vượt qua trình chặn di động
-      if (v1) v1.muted = true;
-      if (vIrwin) vIrwin.muted = true;
+      // Tự động cho video phát sẵn ngầm ngay khi mở trang
+      document.addEventListener("DOMContentLoaded", () => {
+        if (v1) { v1.muted = true; v1.play().catch(() => {}); }
+        if (vIrwin) { vIrwin.muted = true; vIrwin.play().catch(() => {}); }
+      });
 
-      // Mở khóa quyền phát video ngầm khi chạm vào màn hình lần đầu
-      const unlockVideos = () => {
-        if (v1) v1.play().then(() => v1.pause()).catch(() => {});
-        if (vIrwin) vIrwin.play().then(() => vIrwin.pause()).catch(() => {});
-        window.removeEventListener("touchstart", unlockVideos);
-        window.removeEventListener("click", unlockVideos);
-      };
-      window.addEventListener("touchstart", unlockVideos);
-      window.addEventListener("click", unlockVideos);
-
-      // Khi quét thấy ảnh 1
+      // Nhận diện Ảnh 1
       document.querySelector("#target1").addEventListener("targetFound", () => {
-        if (v1) {
-          v1.muted = true;
-          v1.play().catch(e => console.log(e));
-        }
+        if (v1) { v1.currentTime = 0; v1.play().catch(() => {}); }
       });
       document.querySelector("#target1").addEventListener("targetLost", () => {
         if (v1) v1.pause();
       });
 
-      // Khi quét thấy ảnh Irwin
+      // Nhận diện Ảnh Irwin
       document.querySelector("#target-irwin").addEventListener("targetFound", () => {
-        if (vIrwin) {
-          vIrwin.muted = true;
-          vIrwin.play().catch(e => console.log(e));
-        }
+        if (vIrwin) { vIrwin.currentTime = 0; vIrwin.play().catch(() => {}); }
       });
       document.querySelector("#target-irwin").addEventListener("targetLost", () => {
         if (vIrwin) vIrwin.pause();
