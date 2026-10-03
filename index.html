@@ -49,12 +49,10 @@
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- Target 0: Nhân vật 1 -->
       <a-entity mindar-image-target="targetIndex: 0" id="target1">
         <a-video src="#v1" width="1" height="0.75" position="0 0 0" rotation="0 0 0"></a-video>
       </a-entity>
 
-      <!-- Target 1: Irwin -->
       <a-entity mindar-image-target="targetIndex: 1" id="target-irwin">
         <a-video src="#v-irwin" width="1" height="0.75" position="0 0 0" rotation="0 0 0"></a-video>
       </a-entity>
@@ -63,48 +61,54 @@
 
     <script>
       const log = (msg) => {
-        document.querySelector("#status-log").innerText = msg;
+        const el = document.querySelector("#status-log");
+        if (el) el.innerText = msg;
       };
 
       const v1 = document.querySelector("#v1");
       const vIrwin = document.querySelector("#v-irwin");
 
-      // Mở khóa autoplay ngầm khi chạm màn hình
       const unlock = () => {
         if (v1) { v1.muted = true; v1.play().then(() => v1.pause()).catch(()=>{}); }
         if (vIrwin) { vIrwin.muted = true; vIrwin.play().then(() => vIrwin.pause()).catch(()=>{}); }
-        log("Sẵn sàng! Đưa camera lại gần bức ảnh đơn...");
+        log("Sẵn sàng! Đưa camera lại gần bức ảnh...");
       };
       window.addEventListener("touchstart", unlock, { once: true });
       window.addEventListener("click", unlock, { once: true });
 
       const sceneEl = document.querySelector("a-scene");
-      sceneEl.addEventListener("arReady", () => {
-        log("AR Đã Sẵn Sàng! Hãy quét bức ảnh đơn.");
-      });
-      sceneEl.addEventListener("arError", () => {
-        log("LỖI: Không đọc được file targets.mind!");
-      });
+      if (sceneEl) {
+        sceneEl.addEventListener("arReady", () => {
+          log("AR Đã Sẵn Sàng! Hãy quét bức ảnh.");
+        });
+        sceneEl.addEventListener("arError", () => {
+          log("LỖI: Không đọc được file targets.mind!");
+        });
+      }
 
-      // Nhận diện Target 0
-      document.querySelector("#target1").addEventListener("targetFound", () => {
-        log("Đã thấy Nhân vật 1!");
-        if (v1) { v1.muted = true; v1.play().catch(e => log("Lỗi video 1: " + e.message)); }
-      });
-      document.querySelector("#target1").addEventListener("targetLost", () => {
-        log("Đã mất dấu Nhân vật 1.");
-        if (v1) v1.pause();
-      });
+      const t1 = document.querySelector("#target1");
+      if (t1) {
+        t1.addEventListener("targetFound", () => {
+          log("Đã thấy Nhân vật 1!");
+          if (v1) { v1.muted = true; v1.play().catch(e => log("Lỗi video 1: " + e.message)); }
+        });
+        t1.addEventListener("targetLost", () => {
+          log("Đã mất dấu Nhân vật 1.");
+          if (v1) v1.pause();
+        });
+      }
 
-      // Nhận diện Target 1
-      document.querySelector("#target-irwin").addEventListener("targetFound", () => {
-        log("Đã thấy Irwin!");
-        if (vIrwin) { vIrwin.muted = true; vIrwin.play().catch(e => log("Lỗi Irwin: " + e.message)); }
-      });
-      document.querySelector("#target-irwin").addEventListener("targetLost", () => {
-        log("Đã mất dấu Irwin.");
-        if (vIrwin) vIrwin.pause();
-      });
+      const tIrwin = document.querySelector("#target-irwin");
+      if (tIrwin) {
+        tIrwin.addEventListener("targetFound", () => {
+          log("Đã thấy Irwin!");
+          if (vIrwin) { vIrwin.muted = true; vIrwin.play().catch(e => log("Lỗi Irwin: " + e.message)); }
+        });
+        tIrwin.addEventListener("targetLost", () => {
+          log("Đã mất dấu Irwin.");
+          if (vIrwin) vIrwin.pause();
+        });
+      }
     </script>
   </body>
 </html>
