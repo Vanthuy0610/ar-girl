@@ -5,67 +5,70 @@
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-      #play-button {
+      #sound-btn {
         position: fixed;
         bottom: 30px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 999;
+        z-index: 9999;
         padding: 12px 24px;
-        background: #007bff;
+        background: #28a745;
         color: white;
         border: none;
-        border-radius: 25px;
+        border-radius: 30px;
         font-size: 16px;
         font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         display: none;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        cursor: pointer;
       }
     </style>
   </head>
   <body style="margin: 0; overflow: hidden;">
-    <button id="play-button">Bấm vào đây để phát Video</button>
 
+    <button id="sound-btn">🔊 Bật Âm Thanh</button>
+
+    <!-- Đã tắt nút VR bằng vr-mode-ui="enabled: false" -->
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind;" 
-      color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;" 
       vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false">
+      device-orientation-permission-ui="enabled: false" 
+      embedded 
+      color-space="sRGB" 
+      renderer="colorManagement: true, physicallyCorrectLights">
       
       <a-assets>
-        <video id="my-video" src="./video.mp4" preload="auto" loop="true" crossorigin="anonymous" playsinline webkit-playsinline></video>
+        <video id="ar-video" src="./video.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <a-entity id="target-entity" mindar-image-target="targetIndex: 0">
-        <!-- Thay đổi width/height theo tỷ lệ khung hình video của bạn (ví dụ: video 16:9 thì width="1" height="0.5625") -->
-        <a-video src="#my-video" width="1" height="0.75" position="0 0 0" rotation="0 0 0"></a-video>
+      <a-entity mindar-image-target="targetIndex: 0" id="target">
+        <a-video src="#ar-video" width="1" height="1.4" position="0 0 0" rotation="0 0 0"></a-video>
       </a-entity>
     </a-scene>
 
     <script>
-      const video = document.querySelector('#my-video');
-      const targetEntity = document.querySelector('#target-entity');
-      const playBtn = document.querySelector('#play-button');
+      const video = document.querySelector("#ar-video");
+      const btn = document.querySelector("#sound-btn");
+      const target = document.querySelector("#target");
 
-      // Khi phát hiện ra ảnh vật lý
-      targetEntity.addEventListener("targetFound", () => {
-        video.play().catch(() => {
-          // Trình duyệt di động chặn tự động phát âm thanh -> Hiện nút bấm hỗ trợ
-          playBtn.style.display = 'block';
-        });
-      });
-
-      // Khi đưa camera ra khỏi bức ảnh
-      targetEntity.addEventListener("targetLost", () => {
-        video.pause();
-      });
-
-      playBtn.addEventListener('click', () => {
+      target.addEventListener("targetFound", () => {
         video.play();
-        playBtn.style.display = 'none';
+        if (video.muted) {
+          btn.style.display = "block";
+        }
+      });
+
+      target.addEventListener("targetLost", () => {
+        video.pause();
+        btn.style.display = "none";
+      });
+
+      btn.addEventListener("click", () => {
+        video.muted = false;
+        video.play();
+        btn.style.display = "none";
       });
     </script>
   </body>
