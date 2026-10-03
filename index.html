@@ -13,34 +13,13 @@
         overflow: hidden;
         position: fixed;
       }
-
+      /* Ẩn hoàn toàn nút VR/AR dư thừa */
       .a-enter-vr, .a-enter-vr-button, .a-enter-ar, .a-orientation-modal, [vr-mode-ui] {
         display: none !important;
-        visibility: hidden !important;
-      }
-
-      #sound-btn {
-        position: fixed;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 9999;
-        padding: 12px 24px;
-        background: #28a745;
-        color: white;
-        border: none;
-        border-radius: 30px;
-        font-size: 16px;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        display: none;
-        cursor: pointer;
       }
     </style>
   </head>
   <body>
-
-    <button id="sound-btn">🔊 Bật Âm Thanh</button>
 
     <a-scene 
       mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;" 
@@ -50,26 +29,28 @@
       renderer="colorManagement: true, physicallyCorrectLights">
       
       <a-assets>
-        <!-- Video 1 -->
+        <!-- Hoạt ảnh/Video Nhân vật 1 -->
         <video id="v1" src="./video.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
-        <!-- Video 2 (Irwin) -->
+        <!-- Hoạt ảnh/Video Nhân vật Irwin -->
         <video id="v-irwin" src="./irwin.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- Target 0: Nhân vật 1 -->
+      <!-- Vùng 1: Đè lên Ảnh Nhân vật 1 (targetIndex: 0) -->
       <a-entity mindar-image-target="targetIndex: 0" id="target1">
-        <a-video src="#v1" width="1" height="1.4" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-video src="#v1" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-video>
       </a-entity>
 
-      <!-- Target 1: Nhân vật Irwin -->
+      <!-- Vùng 2: Đè lên Ảnh Irwin (targetIndex: 1) -->
       <a-entity mindar-image-target="targetIndex: 1" id="target-irwin">
-        <a-video src="#v-irwin" width="1" height="1.4" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-video src="#v-irwin" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-video>
       </a-entity>
+
     </a-scene>
 
     <script>
+      // Xóa nút VR tự động
       setInterval(() => {
         const vrBtn = document.querySelector('.a-enter-vr');
         if (vrBtn) vrBtn.remove();
@@ -77,42 +58,14 @@
 
       const v1 = document.querySelector("#v1");
       const vIrwin = document.querySelector("#v-irwin");
-      const btn = document.querySelector("#sound-btn");
 
-      const t1 = document.querySelector("#target1");
-      const tIrwin = document.querySelector("#target-irwin");
+      // Quét thấy Ảnh 1 -> Hiện và chạy hoạt ảnh Nhân vật 1
+      document.querySelector("#target1").addEventListener("targetFound", () => v1.play());
+      document.querySelector("#target1").addEventListener("targetLost", () => v1.pause());
 
-      let currentVideo = null;
-
-      // Xử lý khi quét thấy Nhân vật 1
-      t1.addEventListener("targetFound", () => {
-        v1.play();
-        currentVideo = v1;
-        if (v1.muted) btn.style.display = "block";
-      });
-      t1.addEventListener("targetLost", () => {
-        v1.pause();
-        btn.style.display = "none";
-      });
-
-      // Xử lý khi quét thấy Nhân vật Irwin
-      tIrwin.addEventListener("targetFound", () => {
-        vIrwin.play();
-        currentVideo = vIrwin;
-        if (vIrwin.muted) btn.style.display = "block";
-      });
-      tIrwin.addEventListener("targetLost", () => {
-        vIrwin.pause();
-        btn.style.display = "none";
-      });
-
-      // Bật âm thanh chung
-      btn.addEventListener("click", () => {
-        v1.muted = false;
-        vIrwin.muted = false;
-        if (currentVideo) currentVideo.play();
-        btn.style.display = "none";
-      });
+      // Quét thấy Ảnh Irwin -> Hiện và chạy hoạt ảnh Irwin
+      document.querySelector("#target-irwin").addEventListener("targetFound", () => vIrwin.play());
+      document.querySelector("#target-irwin").addEventListener("targetLost", () => vIrwin.pause());
     </script>
   </body>
 </html>
