@@ -111,8 +111,12 @@
           if (activeTarget !== targetName) return;
           resetVideo(video);
           const playPromise = video.play();
-          if (playPromise && typeof playPromise.catch === "function") {
-            playPromise.catch((error) => {
+          if (playPromise && typeof playPromise.then === "function") {
+            playPromise.then(() => {
+              if (activeTarget === targetName) {
+                setStatus("Đang phát animation.");
+              }
+            }).catch((error) => {
               console.error("Không thể phát video AR:", error);
               setStatus("Đã nhận diện nhưng trình duyệt không phát được video.", true);
             });
@@ -146,15 +150,8 @@
         video.muted = true;
         video.setAttribute("muted", "");
         const playPromise = video.play();
-        if (playPromise && typeof playPromise.then === "function") {
-          playPromise.then(() => {
-            window.setTimeout(() => {
-              if (activeTarget === null) {
-                pauseVideo(video);
-                resetVideo(video);
-              }
-            }, 100);
-          }).catch((error) => {
+        if (playPromise && typeof playPromise.catch === "function") {
+          playPromise.catch((error) => {
             console.warn("Không mở khóa được video:", error);
           });
         }
